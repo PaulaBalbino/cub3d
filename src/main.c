@@ -3,71 +3,91 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: pbalbino <pbalbino@student.42.fr>          +#+  +:+       +#+        */
+/*   By: pbalbino <pbalbino@student.42abudhabi.a    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/07/17 16:47:02 by pbalbino        #+#    #+#             */
-/*   Updated: 2023/09/05 19:09:31 by m_kamal         ###   ########.fr       */
+/*   Created: 2023/12/29 05:32:35 by m_kamal           #+#    #+#             */
+/*   Updated: 2024/01/22 21:43:33 by pbalbino         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdlib.h>
-#include "cub3d.h"
+#include "../include/cub3d.h"
 
-void	setup(t_data *data)
+static t_win	*new_win(int w, int h)
 {
-	data->mlx_win = NULL;
-	data->is_game_running = false;
-	data->num_rays = WINDOW_WIDTH;
-	data->mini_map_scale = map_scale_factor(data);
-	data->player.walk_direction = 0;
-	data->player.side_direction = 0;
-	data->player.turn_direction = 0;
-	data->rays = malloc(data->num_rays * sizeof(t_ray));
-	data->color_buffer = malloc((WINDOW_WIDTH * WINDOW_HEIGHT) * sizeof(int));
-	//get_player_position(data); TODO
+	t_win	*win;
+
+	win = malloc(sizeof(t_win));
+	win->mlx = mlx_init();
+	win->height = h;
+	win->width = w;
+	win->m_win = mlx_new_window(win->mlx, win->width, win->height, "Cub3D");
+	return (win);
 }
 
-int	game_loop(t_data *data)
+static t_img	*new_img(int w, int h, t_win *window)
 {
-	if (!data->is_game_running)
-		release_resources(data);
-	move_player(data);
-	cast_all_rays(data);
-	mlx_clear_window(data->mlx_ptr, data->mlx_win);
-	render_walls(data);
-//	render_map(data);
-//	render_player(data);
-	render_ray(data);
-	render_color_buffer(data);
-	return (true);
+	t_img	*image;
+
+	image = malloc(sizeof(t_img));
+	if (!image)
+		ft_error(NULL, MALLOC_ERR);
+	if (h > window->height || w > window->width)
+		ft_error(NULL, IMG_ERR);
+	image->img_ptr = mlx_new_image(window->mlx, w, h);
+	image->addr = mlx_get_data_addr(image->img_ptr, &(image->bpp),
+			&(image->line_length), &(image->endian));
+	image->w = w;
+	image->h = h;
+	return (image);
 }
 
-void	handle_hooks(t_data *data)
+static t_data	*init_cub3d(int w, int h)
 {
-	mlx_loop_hook(data->mlx_ptr, game_loop, data);
-	mlx_hook(data->mlx_win, 2, 1L << 0, key_pressed, data);
-	mlx_hook(data->mlx_win, 3, 1L << 0, key_released, data);
-	//mlx_hook(data->mlx_win, 6, 1L << 0, mouse_event, data);
-	mlx_hook(data->mlx_win, ON_DESTROY, 1L << 17, release_resources, data);
-	mlx_loop(data->mlx_ptr);
+	t_data	*cub3d;
+
+	cub3d = malloc(sizeof(t_data));
+	if (!cub3d)
+		ft_error(NULL, MALLOC_ERR);
+	cub3d->map = NULL;
+	cub3d->win = NULL;
+	cub3d->player = NULL;
+	cub3d->win = new_win(w, h);
+	cub3d->scene = new_img(w, h, cub3d->win);
+	cub3d->rays = malloc(sizeof(t_ray) * WINDOW_WIDTH);
+	if (!cub3d->rays)
+		ft_error(NULL, MALLOC_ERR);
+	cub3d->game_color_buffer = malloc((SCENE_SIZE) * sizeof(int));
+	if (!cub3d->game_color_buffer)
+		ft_error(NULL, MALLOC_ERR);
+	return (cub3d);
 }
 
-int	main(int argc, char *argv[])
+static void	loop_mlx(t_data *cub3d)
 {
-	t_data	data;
+	mlx_loop_hook(cub3d->win->mlx, render_loop, cub3d);
+	mlx_hook(cub3d->win->m_win, ON_KEYDOWN, 1L << 0, key_push, cub3d);
+	mlx_key_hook(cub3d->win->m_win, key_release, cub3d);
+	mlx_hook(cub3d->win->m_win, ON_DESTROY, 1L << 17, exit_window, cub3d);
+	mlx_loop(cub3d->win->mlx);
+}
 
-	if (argc > 2)
-		return (ft_putstr_fd("\x1B[31mOnly One Argument Needed!\x1B[0m\n", 2), 1);
-	if (argc < 2 || ft_strlen(argv[1]) < 4 
-		|| ft_strcmp(&argv[1][ft_strlen(argv[1]) - 4], ".cub"))
-		return (ft_putstr_fd("\x1B[31mEnter .cub file!\x1B[0m\n", 2), 1);
-	map_read(&data, argv[1]);
-	//if (!parse(&data, argv[1]))
-	//	return (1);
-	setup(&data);
-	data.is_game_running = initialize_window(&data);
-	if (data.is_game_running)
-		handle_hooks(&data);
-	release_resources(&data);
+int	main(int argc, char **argv)
+{
+	t_data	*cub3d;
+	int		fd;
+
+	if (argc != 2)
+		ft_error(NULL, ARGS_ERR);
+	fd = open(argv[1], O_RDONLY);
+	if (fd < 0)
+		ft_error(NULL, ARGS_ERR);
+	else
+		close(fd);
+	if (!valid_extension(argv[1], ".cub"))
+		ft_error(NULL, ARGS_ERR);
+	cub3d = init_cub3d(WINDOW_WIDTH, WINDOW_HEIGHT);
+	map_read(cub3d, argv[1]);
+	get_current_rotation_angle(cub3d);
+	loop_mlx(cub3d);
 	return (0);
 }

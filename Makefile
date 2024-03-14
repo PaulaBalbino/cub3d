@@ -21,29 +21,39 @@ else
 	$(error Unsupported OS: $(OS))
 endif
 
-CC				= gcc -g
-CF				= #-Wall -Wextra -Werror #-fsanitize=address
+CC				= gcc -g3
+CF				= -Wall -Wextra -Werror #-fsanitize=address
 CFI					= -I$(INCLUDE)
 CFI_FT		= -L$(FT_PATH) -lft
 
-SRC			= main.c graphics.c map.c my_mlx.c rays.c player.c input.c \
-              			walls.c release.c draw.c rays_utils.c \
-              			check.c utils.c info.c putinfo.c \
-              			ceiling_floor.c \
-              			checker.c \
-              			grid.c \
-              			mapping.c \
-              			errors.c \
-              			utils.c \
-              			destroy.c \
-              			game_utils.c \
-
-
+SRC			= main.c\
+					utils.c\
+					errors.c\
+					destroy.c\
+					destroy_all.c\
+					keybinds.c\
+					mapping.c\
+					checker.c\
+					ceiling_floor.c\
+					grid.c\
+					pixels.c\
+					mm_player.c\
+					text.c\
+					raycasting.c\
+					check_wall.c \
+					directions.c \
+					interception.c \
+					render_walls.c \
+					render.c \
+					load_texture.c \
+					parse_texture.c \
+					render_floor_ceiling.c\
 
 VPATH		= $(SRC_PATH)\
 					$(SRC_PATH)utils/\
 					$(SRC_PATH)rendering/\
 					$(SRC_PATH)parsing/\
+					$(SRC_PATH)parsing/textures/\
 
 OBJ			= $(addprefix $(OBJ_PATH), $(notdir $(SRC:.c=.o)))
 
@@ -86,16 +96,22 @@ fclean: clean
 	@printf "$(GR)Done!$(RC)\n\n"
 
 leak:			all
-				valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./$(NAME) ./maps/test.cub
+				valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --track-fds=yes ./$(NAME) ./maps/success/simple.cub
 
 leak2:			all
-				valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./$(NAME) ./maps/g_map02.cub
+				valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --track-fds=yes ./$(NAME) ./maps/success/cheese_maze.cub
 
 debug:			all
-				lldb-16 ./$(NAME) ./maps/test.cub
+				lldb-16 ./$(NAME) ./maps/success/simple.cub
 
 test:				all
-				./$(NAME) ./maps/test.cub
+				./$(NAME) ./maps/success/simple.cub
+
+valid:
+				./maps/success/tester_sucess.sh
+
+invalid:
+				./maps/invalid/tester_fail.sh
 
 .PHONY:		all clean fclean re
 
@@ -105,14 +121,3 @@ YE	= \033[0;33m
 CY	= \033[36;1m
 BL	= \033[94m
 RC	= \033[0m
-
-# $(LINUX):	ANNOUNCE $(OFILES)
-# 	$(CC) $(CFLAGS) $(OFILES) -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz -o $(LINUX)
-#
-#$(MAC):	ANNOUNCE $(OFILES)
-#	$(CC) $(CFLAGS) $(OFILES) -Lmlx_mac -lmlx -framework OpenGL -framework AppKit -o $(MAC)
-
-
-
-
-

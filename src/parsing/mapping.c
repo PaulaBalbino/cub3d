@@ -6,32 +6,36 @@
 /*   By: pbalbino <pbalbino@student.42abudhabi.a    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/30 08:49:26 by m_kamal           #+#    #+#             */
-/*   Updated: 2024/01/15 10:13:42 by pbalbino         ###   ########.fr       */
+/*   Updated: 2024/01/22 21:50:21 by pbalbino         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "cub3d.h"
+#include "../../include/cub3d.h"
 
 void	init_player(t_data *cub3d)
 {
-	cub3d->player_new = malloc(sizeof(t_player));
-	if (!cub3d->player_new)
+	cub3d->player = malloc(sizeof(t_player));
+	if (!cub3d->player)
 		ft_error(cub3d, MALLOC_ERR);
-	cub3d->player_new->pos = malloc(sizeof(t_point));
-	if (!cub3d->player_new->pos)
+	cub3d->player->pos = malloc(sizeof(t_point));
+	if (!cub3d->player->pos)
 		ft_error(cub3d, MALLOC_ERR);
-	cub3d->player_new->pos_scaled = malloc(sizeof(t_point));
-	if (!cub3d->player_new->pos_scaled)
+	cub3d->player->pos_scaled = malloc(sizeof(t_point));
+	if (!cub3d->player->pos_scaled)
 		ft_error(cub3d, MALLOC_ERR);
-	cub3d->player_new->pos_scaled_game = malloc(sizeof(t_coordinate));
-	if (!cub3d->player_new->pos_scaled_game)
+	cub3d->player->pos_game = malloc(sizeof(t_coordinate));
+	if (!cub3d->player->pos_game)
 		ft_error(cub3d, MALLOC_ERR);
-	cub3d->player_new->pos_scaled->x = -1;
-	cub3d->player_new->pos_scaled->y = -1;
-	//cub3d->player->pos_scaled_game->x = -1;
-	//cub3d->player->pos_scaled_game->y = -1;
-	cub3d->player_new->cardinal = -1;
-	cub3d->player_new->set = -1;
+	cub3d->player->pos->x = -1;
+	cub3d->player->pos->y = -1;
+	cub3d->player->pos_scaled->x = -1;
+	cub3d->player->pos_scaled->y = -1;
+	cub3d->player->cardinal = -1;
+	cub3d->player->set = -1;
+	cub3d->player->rotation_angle = 0;
+	cub3d->player->movement.walk_direction = 0;
+	cub3d->player->movement.turn_direction = 0;
+	cub3d->player->movement.side_direction = 0;
 }
 
 static void	init_map(t_data *cub3d)
@@ -45,6 +49,8 @@ static void	init_map(t_data *cub3d)
 	cub3d->map->x_max = -1;
 	cub3d->map->rows = -1;
 	cub3d->map->grid = NULL;
+	cub3d->map->ceiling_set = FALSE;
+	cub3d->map->floor_set = FALSE;
 	cub3d->map->textures = malloc(sizeof(t_texture *) * 4);
 	if (!cub3d->map->textures)
 		ft_error(NULL, MALLOC_ERR);
@@ -55,9 +61,7 @@ static void	init_map(t_data *cub3d)
 			cub3d->map->floor[i] = -1;
 			cub3d->map->ceiling[i] = -1;
 		}
-		cub3d->map->textures[i] = malloc(sizeof(t_texture));
-		cub3d->map->textures[i]->path = NULL;
-		cub3d->map->textures[i]->cardinal = i;
+		init_textures(cub3d, i);
 	}
 }
 
@@ -104,24 +108,20 @@ static t_bool	fetch_grid(t_data *cub3d, char *filename)
 
 void	map_read(t_data *cub3d, char *filename)
 {
-	int		i;
-
-	i = -1;
 	init_map(cub3d);
 	init_player(cub3d);
-	while (++i < 4)
-		if (!read_textures(cub3d, filename, i))
-			ft_error(cub3d, MAP_ERR);
 	if (!set_floor_ceiling(cub3d, filename))
 		ft_error(cub3d, MAP_ERR);
+	if (!read_load_texture(cub3d, filename))
+		ft_error(cub3d, MAP_ERR);
 	fetch_grid(cub3d, filename);
-	if (cub3d->map->rows < 3)
+	if (cub3d->map->rows < 3 || cub3d->map->floor_set == FALSE \
+		|| cub3d->map->ceiling_set == FALSE)
 		ft_error(cub3d, MAP_ERR);
 	if (!load_grid(cub3d, filename))
 		ft_error(cub3d, MAP_ERR);
-	if (!is_closed(cub3d, cub3d->player_new->pos->x, cub3d->player_new->pos->y))
+	if (!is_closed(cub3d, cub3d->player->pos->x, cub3d->player->pos->y))
 		ft_error(cub3d, MAP_ERR);
 	if (!check_assets(cub3d))
 		ft_error(cub3d, MAP_ERR);
-
 }

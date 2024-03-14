@@ -10,11 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "cub3d.h"
+#include "../../include/cub3d.h"
 
 static void	map_error(void *pointer);
 
-static void	write_err(char *str)
+void	write_err(char *str)
 {
 	write(2, str, ft_strlen(str));
 }
@@ -31,15 +31,14 @@ void	ft_error(void *pointer, int code)
 	else if (code == ARGS_ERR)
 	{
 		write_err(RED);
-		write_err("Error:\n Wrong number of arguments.\n");
+		write_err("Error:\n Wrong map path or arguments.\n");
 		write_err(RESET);
 		exit(0);
 	}
 	else if (code == MAP_ERR)
 		map_error(pointer);
-//	else if (code == EXIT)
-//		exit_window(pointer);
-	// else if (code == IMG_ERR)
+	else if (code == EXIT)
+		exit_window(pointer);
 }
 
 static void	map_error(void *pointer)
@@ -50,6 +49,6 @@ static void	map_error(void *pointer)
 	write_err(RED);
 	write_err("Error:\n Invalid map.\n");
 	write_err(RESET);
-	//free_all(cub3d); TODO add
+	free_all(cub3d);
 	exit(0);
 }

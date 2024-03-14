@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "cub3d.h"
+#include "../../include/cub3d.h"
 
 // Allocate memory for the map grid by counting the number of lines of the map
 // Then allocate memory for each line by counting the number of characters
@@ -89,14 +89,14 @@ static t_bool	set_grid_row(t_data *cub3d, char *line, int j, int len)
 			cub3d->map->grid[j][i].type = WALL;
 		else if (line[i] == ' ')
 			cub3d->map->grid[j][i].type = EMPTY;
-		else if (ft_strchr("NSWE", line[i]) && (cub3d->player_new->set != TRUE))
+		else if (ft_strchr("NSWE", line[i]) && (cub3d->player->set != TRUE))
 		{
 			cub3d->map->grid[j][i].type = PLAYER;
-			cub3d->player_new->set = TRUE;
-			cub3d->player_new->pos->type = PLAYER;
-			cub3d->player_new->pos_scaled_game->x = (i * TILE_SIZE) + TILE_SIZE / 2;
-			cub3d->player_new->pos_scaled_game->y = (j * TILE_SIZE) + TILE_SIZE / 2;
-			cub3d->player_new->cardinal = (int)line[i];
+			cub3d->player->set = TRUE;
+			cub3d->player->pos->type = PLAYER;
+			cub3d->player->pos->x = i;
+			cub3d->player->pos->y = j;
+			cub3d->player->cardinal = (int)line[i];
 		}
 		else if (line[i] == '0')
 			cub3d->map->grid[j][i].type = HALL;

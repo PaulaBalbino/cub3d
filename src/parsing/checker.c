@@ -10,99 +10,27 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "cub3d.h"
-
-static char	*validate_texture(t_data *cub3d, char *filename, char *direction);
-static char	*search_for_asset(char *line, char *direction);
-
-t_bool	read_textures(t_data *cub3d, char *filename, int cardinal)
-{
-	if (cardinal == 0)
-		cub3d->map->textures[cardinal]->path = validate_texture
-			(cub3d, filename, "NO");
-	else if (cardinal == 1)
-		cub3d->map->textures[cardinal]->path = validate_texture
-			(cub3d, filename, "SO");
-	else if (cardinal == 2)
-		cub3d->map->textures[cardinal]->path = validate_texture
-			(cub3d, filename, "EA");
-	else if (cardinal == 3)
-		cub3d->map->textures[cardinal]->path = validate_texture
-			(cub3d, filename, "WE");
-	else
-		return (FALSE);
-	return (TRUE);
-}
-
-static char	*validate_texture(t_data *cub3d, char *filename, char *direction)
-{
-	int		fd;
-	char	*line;
-	char	*texture;
-
-	texture = NULL;
-	fd = open(filename, O_RDONLY);
-	line = get_next_line(fd);
-	if (!line || fd < 0)
-		ft_error(cub3d, MAP_ERR);
-	while (line)
-	{
-		texture = search_for_asset(line, direction);
-		if (texture)
-			break ;
-		free(line);
-		line = get_next_line(fd);
-	}
-	clear_read(line, fd);
-	if (!texture)
-		ft_error(cub3d, MAP_ERR);
-	return (texture);
-}
-
-static char	*search_for_asset(char *line, char *direction)
-{
-	int		i;
-	char	**split;
-	char	*path;
-
-	i = -1;
-	path = NULL;
-	split = ft_split(line, ' ');
-	while (split[++i])
-	{
-		if (ft_strncmp(split[i], direction, ft_strlen(direction)) == 0)
-		{
-			if (!split[i + 1])
-				free_double_ptr((void **)split);
-			else
-			{
-				if (valid_extension(split[i + 1], ".xpm"))
-					path = ft_strdup(split[i + 1]);
-				free_double_ptr((void **)split);
-				return (path);
-			}
-		}
-	}
-	if (split)
-		free_double_ptr((void **)split);
-	return (NULL);
-}
+#include "../../include/cub3d.h"
 
 t_bool	check_assets(t_data *cub3d)
 {
 	int	i;
 
 	i = -1;
-	if (cub3d->player_new->cardinal == 'N')
-		cub3d->player_new->cardinal = 0;
-	else if (cub3d->player_new->cardinal == 'S')
-		cub3d->player_new->cardinal = 1;
-	else if (cub3d->player_new->cardinal == 'E')
-		cub3d->player_new->cardinal = 2;
-	else if (cub3d->player_new->cardinal == 'W')
-		cub3d->player_new->cardinal = 3;
+	cub3d->player->pos_game->x = (cub3d->player->pos->x * TILE_SIZE)
+		+ TILE_SIZE / 2;
+	cub3d->player->pos_game->y = (cub3d->player->pos->y * TILE_SIZE)
+		+ TILE_SIZE / 2;
+	if (cub3d->player->cardinal == 'N')
+		cub3d->player->cardinal = 0;
+	else if (cub3d->player->cardinal == 'S')
+		cub3d->player->cardinal = 1;
+	else if (cub3d->player->cardinal == 'E')
+		cub3d->player->cardinal = 2;
+	else if (cub3d->player->cardinal == 'W')
+		cub3d->player->cardinal = 3;
 	while (++i < 4)
-		if (!cub3d->map->textures[i]->path)
+		if (!cub3d->map->textures[i]->is_set)
 			return (FALSE);
 	i = -1;
 	while (++i < 3)
@@ -130,3 +58,49 @@ t_bool	is_closed(t_data *cub3d, int x, int y)
 		return (FALSE);
 	return (TRUE);
 }
+
+// t_bool	check_first_last_borders(t_data *cub3d)
+// {
+// 	int	i;
+//
+// 	i = 0;
+// 	while (i <= cub3d->map->grid[0]->local_x_max)
+// 	{
+// 		if (cub3d->map->grid[0][i].type == WALL)
+// 			i++;
+// 		else if (cub3d->map->grid[0][i].type != EMPTY)
+// 			return (FALSE);
+// 		i++;
+// 	}
+// 	i = 0;
+// 	while (i <= cub3d->map->grid[cub3d->map->rows - 1]->local_x_max)
+// 	{
+// 		if (cub3d->map->grid[cub3d->map->rows - 1][i].type == WALL)
+// 			i++;
+// 		else if (cub3d->map->grid[cub3d->map->rows - 1][i].type != EMPTY)
+// 			return (FALSE);
+// 		i++;
+// 	}
+// 	return (TRUE);
+// }
+//
+// t_bool	check_right_left_borders(t_data *cub3d)
+// {
+// 	int	i;
+// 	int	j;
+//
+// 	i = 0;
+// 	while (++i < cub3d->map->rows - 1)
+// 	{
+// 		j = 0;
+// 		while (j <= cub3d->map->grid[i]->local_x_max)
+// 		{
+// 			if (cub3d->map->grid[i][j].type == WALL)
+// 				j++;
+// 			else if (cub3d->map->grid[i][j].type != EMPTY)
+// 				return (FALSE);
+// 			j++;
+// 		}
+// 	}
+// 	return (TRUE);
+// }

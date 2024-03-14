@@ -41,8 +41,5 @@ Arrow keys: Rotate the player view
 
 Esc: Exit the game
 
-### Screenshots
-
---- to be added ---
 
 Have lots of fun!

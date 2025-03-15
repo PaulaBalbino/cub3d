@@ -28,7 +28,7 @@ Cub3D is a 42 School project that introduces students to the basics of graphics 
 ### Installation
 
 Clone the repository:
-git clone https://github.com/MIkamal88/cub3d
+git clone https://github.com/PaulaBalbino/cub3d
 
 cd cub3d
 
